@@ -256,3 +256,33 @@ test('Continuous pause', function(t) {
     t.end()
   }
 })
+
+if(0)
+test('Feeds from couch', function(t) {
+  t.ok(couch.rtt(), 'RTT to couch is known')
+
+  var queries = [ 'longpoll' ]
+  test_query()
+
+  function test_query() {
+    var type = queries.shift()
+    if(!type)
+      return t.end()
+
+    var feed = new follow.Changes({'feed':type})
+
+    var uri = couch.DB + '/_changes?feed=' + type
+    var req = request({'uri':uri, 'onResponse':true}, on_response)
+
+    function on_response(er, res, body) {
+      t.false(er, 'No problem fetching the feed: ' + uri)
+
+      t.type(body, 'undefined', 'No data in the callback. This is an onResponse callback')
+      t.type(res.body, 'undefined', 'No response body in the callback. This is an onResponse callback')
+
+      req.pipe(feed)
+
+      test_query()
+    }
+  }
+})
